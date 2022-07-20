@@ -1,0 +1,82 @@
+pipeline {    
+    options { skipDefaultCheckout() }
+    agent {label 'jenkinsmaster'} 
+    
+     
+    
+    
+    
+    stages {    
+    
+        stage('BUILD Image Frontend') {
+            steps{
+                checkout scm                
+                
+
+                echo "#################### Build Image Frontend  #################"
+                sh '''  
+                        docker build -t frontend:1.1-4 FE
+                       
+                '''
+            }
+        }
+        stage('TAG Image Frontend') {
+            steps{
+                echo "#################### Tag  Image ms-frontend to azurecr.io #################"
+                sh '''  
+                        
+                        
+                        
+                        
+                        docker tag frontend:1.1-4 paas2.azurecr.io/frontend:1.1-4
+                        
+                        '''
+            }
+        }
+        stage('PUSH Image Frontend') {
+            steps{
+                echo "#################### Push Image ms-frontend to azurecr.io #################"
+                sh ''' 
+
+                        docker push paas2.azurecr.io/frontend:1.1-4
+                '''
+            }
+        }
+
+        stage('BUILD Image Backend') {
+            steps{
+
+                echo "#################### Build Image Backend #################"
+                sh '''  
+                        docker build -t backend:1.1.5 BE
+                        
+                '''
+            }
+        }
+        stage('TAG Image Backend') {
+            steps{
+
+                echo "#################### Tag Image Backend #################"
+                sh '''  
+                        docker tag backend:1.1.5 paas2.azurecr.io/backend
+                        '''
+            }
+        }
+        stage('Push Image Backend') {
+            steps{
+
+                echo "#################### Push Image Backend #################"
+                sh '''  
+
+                        docker push paas2.azurecr.io/backend
+                '''
+               
+                
+                
+                
+            } 
+        } 
+        
+    }
+        
+}

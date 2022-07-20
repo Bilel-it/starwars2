@@ -1,0 +1,107 @@
+pipeline {    
+    options { skipDefaultCheckout() }
+    agent {label 'jenkinsmaster'} 
+    
+     environment {
+        tag = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%H'").trim()
+    }
+    
+    
+    
+        
+    
+    
+    
+    
+    stages {  
+    
+    
+    stage('Clean Workspace') {
+            steps {
+                 cleanWs()
+            }
+        }
+        
+    
+    
+        stage('BUILD Image Frontend') {
+            steps{
+                checkout scm                
+                
+
+                echo "#################### Build Image Frontend  #################"
+                sh '''  
+                        docker build -t frontend:1.1.5 FE
+                       
+                '''
+            }
+        }
+        stage('TAG Image Frontend') {
+            steps{
+                echo "#################### Tag  Image ms-frontend to azurecr.io #################"
+                sh '''  
+                        
+                        docker tag frontend:1.1.5 imagedockerpaas.azurecr.io/frontend:${tag}
+                        '''
+            }
+        }
+        stage('PUSH Image Frontend') {
+            steps{
+                echo "#################### Push Image ms-frontend to azurecr.io #################"
+                sh ''' 
+
+                        docker push imagedockerpaas.azurecr.io/frontend:${tag}
+                '''
+            }
+        }
+
+        stage('BUILD Image Backend') {
+            steps{
+
+                echo "#################### Build Image Backend #################"
+                sh '''  
+                        docker build -t backend:1.1.5 BE
+                        
+                '''
+            }
+        }
+        stage('TAG Image Backend') {
+            steps{
+
+                echo "#################### Tag Image Backend #################"
+                sh '''  
+                        docker tag backend:1.1.5 imagedockerpaas.azurecr.io/backend:${tag}
+                        '''
+            }
+        }
+        stage('Push Image Backend') {
+            steps{
+
+                echo "#################### Push Image Backend #################"
+                sh '''  
+
+                        docker push imagedockerpaas.azurecr.io/backend:${tag}
+                '''
+                         
+                
+                
+            } 
+        } 
+        
+        stage('Trigger Manifest Update') {
+            steps{
+
+                echo "#################### Trigger Manifest UPDATE #################"
+                
+                build job: 'update', parameters: [string(name: 'DOCKERTAG', value: env.tag)]
+                         
+                
+                
+            } 
+        } 
+        
+        
+        
+    }
+        
+}

@@ -1,0 +1,64 @@
+pipeline {    
+    options { skipDefaultCheckout() }
+    agent {label 'jenkinsmaster'}  
+    stages {
+        stage('BUILD & Push Image') {
+            steps{
+                checkout scm
+
+                echo "#################### Build  frontend  #################"
+                sh '''  
+                        docker build -t frontend:1.1-4 FE
+                       
+
+                '''
+                echo "#################### Tag & Push Image ms-frontend to azurecr.io #################"
+                sh '''  
+                        
+                        docker tag frontend:1.1-4 imagedockerpaas.azurecr.io/frontend:1.1-4
+                        docker push imagedockerpaas.azurecr.io/frontend:1.1-4
+
+                '''
+
+
+
+
+                echo "#################################"
+                echo "#################### backend #################"
+                sh '''  
+                        docker build -t backend:1.1-4 BE
+                        
+                '''
+                echo "#################### Tag & Push Image products #################"
+                sh '''  
+                        docker tag backend:1.1-4 imagedockerpaas.azurecr.io/backend:1.1-4
+                        docker push imagedockerpaas.azurecr.io/backend:1.1-4
+                '''
+               
+                
+
+                
+
+                
+            } 
+        } 
+        stage('Deploy AKS') {
+            steps{
+                echo "#################### Deplot inAKS  #################"
+
+                script {
+                    kubernetesDeploy(configs: 'kubemanifets.yaml', kubeconfigId: 'kubernetes', enableConfigSubstitution: true)
+                    
+                }
+                
+
+         }
+         
+         
+            
+            
+
+        }
+    }
+        
+}
